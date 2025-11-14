@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Branded QR Code Generator</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+        }
+        /* Style for the canvas container to center the QR code */
+        #qrOutput {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 1.5rem;
+        }
+    </style>
+    <!-- Load QRious Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+</head>
+<body class="p-4 sm:p-8">
+
+    <div class="max-w-4xl mx-auto bg-white shadow-2xl rounded-xl p-6 md:p-10">
+        <h1 class="text-3xl font-extrabold text-gray-900 mb-2
+        text-center">
+            <span class="text-indigo-600">Branded</span> QR Code Creator
+        </h1>
+        <p class="text-center text-gray-500 mb-8">Generate a QR code with an embedded logo.</p>
+
+        <!-- Input Fields -->
+        <div class="space-y-6">
+            <div>
+                <label for="urlInput" class="block text-sm font-medium text-gray-700">Link to Encode (URL)</label>
+                <input type="url" id="urlInput" value="https://www.google.com/"
+                       class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
+                       placeholder="e.g., https://yourwebsite.com">
+            </div>
+            <div>
+                <label for="logoFileInput" class="block text-sm font-medium text-gray-700">Upload Center Logo Image (PNG/JPG)</label>
+                <!-- Styled File Input -->
+                <input type="file" id="logoFileInput" accept="image/png, image/jpeg"
+                       class="mt-1 block w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 cursor-pointer focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition duration-150">
+                <p class="mt-1 text-xs text-gray-500">Note: For optimal scanning, the QR code uses a High (H) error correction level.</p>
+            </div>
+        </div>
+
+        <!-- Action Button -->
+        <button id="generateBtn" onclick="generateQRCode()"
+                class="w-full mt-8 py-3 px-4 border border-transparent rounded-lg shadow-md text-lg font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-200 ease-in-out transform hover:scale-[1.01]">
+            Generate Branded QR Code
+        </button>
+
+        <!-- Status Message & Loader -->
+        <p id="message" class="mt-4 text-center text-sm font-medium text-red-500 hidden"></p>
+
+        <!-- QR Code Output Area -->
+        <div id="qrOutput" class="min-h-[300px] flex flex-col items-center">
+            <canvas id="qrCanvas" class="shadow-xl rounded-lg"></canvas>
+            <a id="downloadLink" download="branded-qrcode.png"
+               class="hidden mt-6 py-2 px-6 border border-transparent rounded-lg text-sm font-medium text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150">
+                Download QR Code (PNG)
+            </a>
+        </div>
+
+    </div>
+
+    <script>
+        const MESSAGE = document.getElementById('message');
+        const CANVAS_SIZE = 512; // Base canvas resolution for high-quality export
+        const QR_CANVAS = document.getElementById('qrCanvas');
+        const DOWNLOAD_LINK = document.getElementById('downloadLink');
+        const LOGO_FILE_INPUT = document.getElementById('logoFileInput');
+
+        // Global variable to store the uploaded image data (Base64 URL)
+        let logoBase64 = null;
+
+        // Initialize canvas attributes
+        QR_CANVAS.width = CANVAS_SIZE;
+        QR_CANVAS.height = CANVAS_SIZE;
+
+        /**
+         * Fallback URL for when no image is uploaded.
+         */
+        const FALLBACK_LOGO_URL = 'https://placehold.co/128x128/8b5cf6/FFFFFF?text=LOGO';
+
+        // --- File Upload Handler ---
+
+        LOGO_FILE_INPUT.addEventListener('change', handleLogoUpload);
+
+        /**
+         * Reads the uploaded image file and converts it into a Base64 Data URL.
+         */
+        function handleLogoUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                if (!file.type.startsWith('image/')) {
+                    showMessage("Please upload a valid image file (PNG/JPG).", 'text-red-500');
+                    logoBase64 = null;
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    // Store the Base64 data for use in generateQRCode
+                    logoBase64 = e.target.result;
+                    showMessage("Logo image loaded successfully. Click Generate.", 'text-green-600');
+                };
+                reader.onerror = () => {
+                    showMessage("Error reading file.", 'text-red-500');
+                    logoBase64 = null;
+                };
+                reader.readAsDataURL(file); // Converts file to Base64 string
+            } else {
+                logoBase64 = null;
+            }
+        }
+
+        // --- QR Code Generation Logic ---
+
+        /**
+         * Main function to generate the QR code and embed the image.
+         */
+        function generateQRCode() {
+            MESSAGE.classList.add('hidden');
+            DOWNLOAD_LINK.classList.add('hidden');
+
+            const url = document.getElementById('urlInput').value.trim();
+
+            if (!url) {
+                showMessage("Please enter a link to encode.");
+                return;
+            }
+
+            // Determine the image source: uploaded file (Base64) or fallback URL
+            const imageSource = logoBase64 || FALLBACK_LOGO_URL;
+            if (!logoBase64) {
+                 showMessage("No logo file uploaded. Using a default placeholder logo.", 'text-yellow-600');
+            }
+
+
+            // 1. Generate the base QR code pattern onto the canvas
+            try {
+                // QRious automatically draws on the provided canvas element
+                new QRious({
+                    element: QR_CANVAS,
+                    value: url,
+                    size: CANVAS_SIZE,
+                    level: 'H', // Use High error correction for logo embedding
+                    padding: 0 // Minimal padding
+                });
+            } catch (error) {
+                console.error("QRious generation failed:", error);
+                showMessage("Could not generate QR code. Check the link format.");
+                return;
+            }
+
+            // 2. Load and draw the logo image
+            const img = new Image();
+            // Since we are using Base64/Data URLs or a placeholder, CORS is generally not an issue,
+            // but we keep crossOrigin for robustness if the fallback URL changes.
+            img.crossOrigin = "anonymous";
+
+            // Add a temporary loading message
+            showMessage("Loading image and finalizing QR code...", 'text-blue-600');
+
+            img.onload = () => {
+                try {
+                    const ctx = QR_CANVAS.getContext('2d');
+
+                    // Logo size calculation: 20% of the QR code canvas size
+                    const logoSize = CANVAS_SIZE * 0.20;
+                    const x = (CANVAS_SIZE - logoSize) / 2;
+                    const y = (CANVAS_SIZE - logoSize) / 2;
+
+                    // A: Draw a white background square for better logo visibility and contrast
+                    // This is slightly larger than the logo to create a clean border.
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillRect(x - 5, y - 5, logoSize + 10, logoSize + 10);
+
+                    // B: Draw the logo image
+                    ctx.drawImage(img, x, y, logoSize, logoSize);
+
+                    // Finalize: Enable download link and clear messages
+                    DOWNLOAD_LINK.href = QR_CANVAS.toDataURL('image/png');
+                    DOWNLOAD_LINK.classList.remove('hidden');
+                    showMessage("QR Code generated successfully! Ready to download.", 'text-green-600');
+
+                } catch (e) {
+                    console.error("Error drawing logo on canvas:", e);
+                    showMessage("A problem occurred while drawing the logo.", 'text-red-500');
+                }
+            };
+
+            img.onerror = () => {
+                showMessage("The image source (uploaded or fallback) could not be loaded. Please ensure it's a valid image file.", 'text-red-500');
+            };
+
+            // Set the image source to start loading (either Base64 or URL)
+            img.src = imageSource;
+        }
+
+        /**
+         * Utility to display status messages.
+         */
+        function showMessage(text, className = 'text-red-500') {
+            MESSAGE.textContent = text;
+            MESSAGE.className = `mt-4 text-center text-sm font-medium ${className}`;
+            MESSAGE.classList.remove('hidden');
+        }
+
+        // Initialize with a call to generate a default QR code on load
+        window.onload = generateQRCode;
+    </script>
+</body>
+</html>
