@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Artistic QR Code Generator</title>
+    <title>Custom QR Code Generator</title>
     <!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Custom font and base styles */
@@ -30,8 +30,8 @@
 <body class="p-4 sm:p-8">
 
     <div class="max-w-4xl mx-auto bg-white shadow-2xl rounded-xl p-6 md:p-10">
-        <h1 class="text-3xl font-extrabold text-gray-900 mb-2 text-center">
-            <span class="text-indigo-600">Artistic</span> Branded QR Code
+        <h1 class="text-3xl font-extrabold text-gray-900 mb-2 rotatext-center">
+            <span class="text-indigo-600">Custom</span> Branded QR Code
         </h1>
         <p class="text-center text-gray-500 mb-8">Generate a custom QR code with rounded modules and an embedded logo.</p>
 
@@ -50,16 +50,16 @@
             </div>
         </div>
 
-        <!-- Action Button --><button id="generateBtn" onclick="generateArtisticQRCode()"
+        <!-- Action Button --><button id="generateBtn" onclick="generateCustomQRCode()"
                 class="w-full mt-8 py-3 px-4 border border-transparent rounded-lg shadow-md text-lg font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-200 ease-in-out transform hover:scale-[1.01]">
-            Generate Artistic QR Code
+            Generate Custom QR Code
         </button>
 
         <!-- Status Message & Loader --><p id="message" class="mt-4 text-center text-sm font-medium text-red-500 hidden"></p>
 
         <!-- QR Code Output Area --><div id="qrPlaceholder" class="flex-col">
             <!-- This div is where qrcode.js will put the canvas --><div id="qrCanvas"></div> 
-            <a id="downloadLink" download="artistic-qrcode.png"
+            <a id="downloadLink" download="custom-qrcode.png"
                class="hidden mt-6 py-2 px-6 border border-transparent rounded-lg text-sm font-medium text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150">
                 Download QR Code (PNG)
             </a>
@@ -110,9 +110,9 @@
             }
         }
 
-        // --- Artistic QR Code Generation Logic ---
+        // --- Custom QR Code Generation Logic ---
 
-        function generateArtisticQRCode() {
+        function generateCustomQRCode() {
             MESSAGE.classList.add('hidden');
             DOWNLOAD_LINK.classList.add('hidden');
 
@@ -127,7 +127,7 @@
             QR_CANVAS_CONTAINER.innerHTML = '';
             showMessage("Generating QR Code...", 'text-blue-600');
 
-            // 1. Generate the artistic QR code using qrcode.js
+            // 1. Generate the custom QR code using qrcode.js
             try {
                 // Initialize QRCode.js
                 const qr = new QRCode(QR_CANVAS_CONTAINER, {
@@ -199,7 +199,7 @@
                         // Success message for using the GitHub-hosted fallback logo
                         showMessage("QR Code generated successfully with your GitHub-hosted default logo. Ready to download.", 'text-green-600');
                     } else {
-                        showMessage("Artistic QR Code generated successfully! Ready to download.", 'text-green-600');
+                        showMessage("Custom QR Code generated successfully! Ready to download.", 'text-green-600');
                     }
 
                 } catch (e) {
@@ -226,7 +226,7 @@
         }
 
         // Initialize with a call to generate a default QR code on load
-        window.onload = generateArtisticQRCode;
+        window.onload = generateCustomQRCode;
     </script>
 </body>
 </html>
