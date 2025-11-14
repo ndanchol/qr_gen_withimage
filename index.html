@@ -76,8 +76,7 @@
         let logoBase64 = null; 
         const CANVAS_SIZE = 512;
         
-        // IMPORTANT: Replace this with the RAW URL of your PNG file hosted on GitHub!
-        // This example uses a placeholder service that simulates a static hosted image.
+        // UPDATED: Using the user-provided, working GitHub RAW URL for the fallback logo.
         const FALLBACK_LOGO_URL = 'https://raw.githubusercontent.com/ndanchol/qr_gen_withimage/main/assets/default_logo.png'; 
         
         // --- File Upload Handler ---
@@ -165,7 +164,7 @@
             const imageSource = logoBase64 || FALLBACK_LOGO_URL; // Use uploaded logo or fallback
 
             const img = new Image();
-            // Set crossOrigin to 'anonymous' if loading from an external domain (like GitHub raw content)
+            // Set crossOrigin to 'anonymous' when loading from an external domain like GitHub raw content
             img.crossOrigin = "anonymous"; 
 
             img.onload = () => {
@@ -197,19 +196,21 @@
                     DOWNLOAD_LINK.classList.remove('hidden');
                     
                     if (!logoBase64) {
-                        showMessage("QR Code generated with **GitHub-hosted fallback logo**. Ready to download.", 'text-yellow-600');
+                        // Success message for using the GitHub-hosted fallback logo
+                        showMessage("QR Code generated successfully with your GitHub-hosted default logo. Ready to download.", 'text-green-600');
                     } else {
                         showMessage("Artistic QR Code generated successfully! Ready to download.", 'text-green-600');
                     }
 
                 } catch (e) {
                     console.error("Error drawing logo on canvas:", e);
-                    showMessage("A problem occurred while drawing the logo. Check the fallback image URL.", 'text-red-500');
+                    showMessage("A problem occurred while drawing the logo.", 'text-red-500');
                 }
             };
 
             img.onerror = () => {
-                showMessage(`The image source (${imageSource.substring(0, 50)}...) could not be loaded. Please ensure the GitHub RAW URL is correct.`, 'text-red-500');
+                // If the GitHub link fails for any reason (e.g., deleted file)
+                showMessage(`Fatal Error: The GitHub-hosted default logo could not be loaded from ${FALLBACK_LOGO_URL}.`, 'text-red-500');
             };
 
             img.src = imageSource;
@@ -229,6 +230,3 @@
     </script>
 </body>
 </html>
-
-
-
